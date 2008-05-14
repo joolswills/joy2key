@@ -96,6 +96,7 @@ int jsfd=-1,
     button_actions[256],
     axis_actions[256][2],
     axis_threshold[256][2], /* 0 = low (down); 1 = hi (up) */
+    axis_threshold_defined[256], /* 1 == defined */
     axis_act_counter=0,
     button_act_counter=0,
     thresh_counter=0,
@@ -161,6 +162,7 @@ int main(int argc, char **argv)
 		   JOY2KEY_VERSION, __DATE__, __TIME__);
 
     memset(axis_threshold, 0, sizeof(axis_threshold));
+    memset(axis_threshold_defined, 0, sizeof(axis_threshold_defined));
     memset(axis_actions, 0, sizeof(axis_actions));
     memset(button_actions, 0, sizeof(button_actions));
     memset(button_repeat_flags, 0, sizeof(button_repeat_flags));
@@ -251,7 +253,7 @@ int main(int argc, char **argv)
 
     for(i=0; i<numaxes; i++)
     {
-		if(!(axis_threshold[i][0] | axis_threshold[i][1]))
+		if(! axis_threshold_defined[i])
 			calibrate(i);
     }
 
@@ -558,6 +560,8 @@ void process_args(int argc, char **argv)
 					puts("Not enough arguments to -thresh");
 					exit(1);
 				}
+                if(argv[i][0] != 'x'  && argv[i+1][1] != 'x') 
+                    axis_threshold_defined[thresh_counter] = 1;
 				axis_threshold[thresh_counter][0]=atoi(argv[i]);
 				axis_threshold[thresh_counter++][1]=atoi(argv[++i]);
 			}
@@ -719,6 +723,7 @@ void calibrate(int num)
     printf("\nUsing deadzone of %i%%\n", deadzone);
     axis_threshold[num][0]=joymid+((axis_threshold[num][0] - joymid) * (deadzone/100.0));
     axis_threshold[num][1]=joymid+((axis_threshold[num][1] - joymid) * (deadzone/100.0));
+    axis_threshold_defined[num] = 1;
     puts("Calibrations set at:");
     printf("Axis %i low threshold set at %i\n", num, axis_threshold[num][0]);
     printf("Axis %i high threshold set at %i\n", num, axis_threshold[num][1]);    
