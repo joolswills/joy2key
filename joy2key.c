@@ -386,7 +386,10 @@ int check_config(int argc, char **argv)
 						else rcargv[rcargc]=strdup(line);
 						fscanf(file, " %s ", line);
 					}
-					if(feof(file)) rcargv[rcargc]=strdup(line);
+					if(feof(file)) {
+						rcargv[rcargc]=strdup(line);
+						rcargc++;
+					}
 					process_args(rcargc, rcargv);
 					for(rcargc--;rcargc>0;rcargc--) free(rcargv[rcargc]);
 				}		
@@ -435,7 +438,10 @@ int check_config(int argc, char **argv)
 							else rcargv[rcargc]=strdup(line);
 							fscanf(file, " %s ", line);
 						}
-						if(feof(file)) rcargv[rcargc]=strdup(line);
+						if(feof(file)) {
+							rcargv[rcargc]=strdup(line);
+							rcargc++;
+						}
 /* XXX			process_args(rcargc+1, rcargv); */
 						process_args(rcargc, rcargv);
 						for(rcargc--;rcargc>0;rcargc--) free(rcargv[rcargc]);
@@ -466,7 +472,10 @@ int check_config(int argc, char **argv)
 							else rcargv[rcargc]=strdup(line);
 							fscanf(file, " %s ", line);
 						}
-						if(feof(file)) rcargv[rcargc]=strdup(line);
+						if(feof(file)) {
+							rcargv[rcargc]=strdup(line);
+							rcargc++;
+						}
 /* XXX			process_args(rcargc+1, rcargv); */
 						process_args(rcargc, rcargv);
 						for(rcargc--;rcargc>0;rcargc--) free(rcargv[rcargc]);
@@ -501,7 +510,7 @@ void process_args(int argc, char **argv)
 				puts("Must specify a target first!");
 				exit(1);
 			}
-			if(i+1>argc) 
+			if(i+1==argc) 
 			{
 				puts("Not enough arguments to -axis");
 				exit(1);
@@ -509,7 +518,7 @@ void process_args(int argc, char **argv)
 			axis_act_counter=0;
 			while((i+1)<argc && argv[i+1][0]!='-')
 			{		
-				if(i+2>argc) 
+				if(i+2==argc) 
 				{
 					puts("Not enough arguments to -axis");
 					exit(1);
@@ -529,7 +538,7 @@ void process_args(int argc, char **argv)
 				exit(1);
 			}
 
-			if(i+1>argc) 
+			if(i+1==argc) 
 			{
 				puts("Not enough arguments to -buttons");
 				exit(1);
@@ -545,7 +554,7 @@ void process_args(int argc, char **argv)
 		}
 		if(!strcmp(argv[i], "-thresh"))
 		{
-			if(i+1>argc) 
+			if(i+1==argc) 
 			{
 				puts("Not enough arguments to -thresh");
 				exit(1);
@@ -555,7 +564,7 @@ void process_args(int argc, char **argv)
 				   (argv[i+1][0]=='-' && isdigit(argv[i+1][1]))))
 			{
 				i++;
-				if(i+2>argc) 
+				if(i+1==argc) 
 				{
 					puts("Not enough arguments to -thresh");
 					exit(1);
@@ -569,7 +578,7 @@ void process_args(int argc, char **argv)
 		}
 		if(!strcmp(argv[i], "-autorepeat"))
 		{
-			if(i+2>argc || (argv[i+1][0]=='-')) 
+			if(i+1==argc || (argv[i+1][0]=='-')) 
 			{
 				repeat_time.it_interval.tv_usec=1000000/DEFAULT_AUTOREPEAT;
 				continue;
@@ -590,7 +599,7 @@ void process_args(int argc, char **argv)
 		}
 		if(!strcmp(argv[i], "-deadzone"))
 		{
-			if(i+2>argc || (argv[i+1][0]=='-')) 
+			if(i+1==argc || (argv[i+1][0]=='-')) 
 			{
 				puts("Not enough arguments to -deadzone");
 				exit(1);		
@@ -616,7 +625,7 @@ void process_args(int argc, char **argv)
 
 		if(!strcmp(argv[i], "-dev"))
 		{
-			if(i+2>argc) 
+			if(i+1==argc) 
 			{
 				puts("Not enough arguments to -dev");
 				exit(1);
