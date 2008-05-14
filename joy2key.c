@@ -134,6 +134,7 @@ void sendkey(int keycode, press_or_release_type PoR);
 void cleanup(int s);
 void repeat_handler(int s);
 void calibrate(int num);
+int argtokey(char *arg);
 
 int main(int argc, char **argv)
 {
