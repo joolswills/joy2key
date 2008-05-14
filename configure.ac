@@ -19,9 +19,17 @@ AC_ARG_ENABLE(console, [  --disable-console       do not compile in console feat
               if test $enableval != no; then AC_DEFINE(ENABLE_CONSOLE) fi,
               AC_DEFINE(ENABLE_CONSOLE))
 
-AC_ARG_ENABLE(X, [  --disable-X             do not compile in X features],
-              if test $enableval != no; then AC_DEFINE(ENABLE_X) export xstuff="-L$x_libraries -lX11"; fi,
-              AC_DEFINE(ENABLE_X) export X_Stuff="-L$x_libraries -lX11")
+AC_ARG_ENABLE( X, [ AC_HELP_STRING([--enable-X], [Compile in X features default=enabled]) ], Xbuild=$enableval )
+if test "$Xbuild" != "no"
+then
+	AC_DEFINE(ENABLE_X)
+	if test x$x_libraries != x
+	then
+		export X_Stuff="-L$x_libraries -lX11"
+	else
+		export X_Stuff="-lX11"
+	fi
+fi
 
 AC_SUBST(X_Stuff)
 AC_SUBST(x_headers)
