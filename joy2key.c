@@ -1,7 +1,7 @@
-/* 
+/*
    joy2key 
    
-   This program gets events from the joystick device /dev/js0 and
+   This program gets events from the joystick device /dev/input/js0 and
    dispatches X events or console keypresses to a specific window
    based on joystick status.  It is most useful for adding joystick
    support to games that don't nativly support the joystick, using
@@ -56,6 +56,19 @@
 			    bug parsing joy2keyrc files...  ;-p
 	1.6.1 (27 Jan 2005) - Just a trivial update to fix the web page
 	                    and email addresses.
+	1.6.2 (22 Mar 2007) - Rens (mraix@xs4all.nl)
+                          - Fixed a bug, preventing joy2key from using your
+                            highest numbered button.
+                          - Made joy2key lower case / upper case - aware
+                            by simulating actual keyboard behaviour: capital
+                            A is generated like this:
+                            key-shift-down, key-"a"-down, key-"a"-up, key-shift-up
+                            Exactly as you would type it..... It sounds trivial,
+                            but I found out that a lot of games
+                            ( Especially Windoze games running in Wine )
+                            require exact simulation of the keyboard-presses
+                            or there will be no joy(2key).
+
 */
 
 /* Should be specified in the makefile */
@@ -68,10 +81,12 @@
 
 #define DEFAULT_AUTOREPEAT             5
 #define DEFAULT_DEADZONE               50
-#define DEFAULT_DEVICE                 "/dev/js0"
+#define DEFAULT_DEVICE                 "/dev/input/js0"
 #define DEFAULT_RCFILE                 ".joy2keyrc" /* located in $(HOME) */
 #define PETERS_EMAIL                   "tetron@interreality.org"
 
+#define XK_MISCELLANY 			1
+#define XK_LATIN1 			1
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -92,8 +107,9 @@
 #include <X11/keysym.h>
 #endif
 
+int unsigned button_actions[256];
+int button_upper[256];
 int jsfd=-1,
-    button_actions[256],
     axis_actions[256][2],
     axis_threshold[256][2], /* 0 = low (down); 1 = hi (up) */
     axis_threshold_defined[256], /* 1 == defined */
@@ -131,7 +147,7 @@ int consolefd;
 void process_args(int argc, char **argv);
 int check_config(int argc, char **argv);
 int check_device(int argc, char **argv);
-void sendkey(int keycode, press_or_release_type PoR);
+void sendkey(unsigned int keycode, press_or_release_type PoR, int iscap);
 void cleanup(int s);
 void repeat_handler(int s);
 void calibrate(int num);
@@ -165,6 +181,7 @@ int main(int argc, char **argv)
     memset(axis_threshold_defined, 0, sizeof(axis_threshold_defined));
     memset(axis_actions, 0, sizeof(axis_actions));
     memset(button_actions, 0, sizeof(button_actions));
+    memset(button_upper, 0, sizeof(button_upper));
     memset(button_repeat_flags, 0, sizeof(button_repeat_flags));
     memset(axis_hold_flags, 0, sizeof(axis_hold_flags));
     repeat_time.it_interval.tv_sec=0;
@@ -306,7 +323,7 @@ int main(int argc, char **argv)
 			{
 				button_repeat_flags[js.number]=js.value;
 				sendkey(button_actions[js.number], 
-						js.value ? PRESS : RELEASE);
+						js.value ? PRESS : RELEASE, button_upper[js.number]);
 			}
 			break;
 		case JS_EVENT_AXIS: /* axis */
@@ -318,11 +335,11 @@ int main(int argc, char **argv)
 					{
 					case 1:
 						if(js.value>axis_threshold[js.number][0])
-							sendkey(axis_actions[js.number][0], RELEASE);
+							sendkey(axis_actions[js.number][0], RELEASE, 0);
 						break;
 					case 2:
 						if(js.value<axis_threshold[js.number][1])
-							sendkey(axis_actions[js.number][1], RELEASE);
+							sendkey(axis_actions[js.number][1], RELEASE, 0);
 						break;
 					}
 					axis_hold_flags[js.number]=0;
@@ -330,13 +347,13 @@ int main(int argc, char **argv)
 				if(js.value<axis_threshold[js.number][0])
 				{ 
 					if(!axis_actions[js.number][0]) break;
-					sendkey(axis_actions[js.number][0], PRESS);
+					sendkey(axis_actions[js.number][0], PRESS, 0);
 					axis_hold_flags[js.number]=1;
 				}
 				if(js.value>axis_threshold[js.number][1])
 				{
 					if(!axis_actions[js.number][1]) break;
-					sendkey(axis_actions[js.number][1], PRESS);
+					sendkey(axis_actions[js.number][1], PRESS, 0);
 					axis_hold_flags[js.number]=2;
 				}		
 			}	    
@@ -544,10 +561,23 @@ void process_args(int argc, char **argv)
 				exit(1);
 			}
 			button_act_counter=0;
-			while((i+1)<argc && (argv[i+1][0]!='-' || 
+			while((i+1)<=argc && (argv[i+1][0]!='-' || 
 								 (argv[i+1][0]=='-' && !argv[i+1][1])))
 			{
 				button_actions[button_act_counter]=argtokey(argv[++i]);
+				printf("arg2key fed with %s ",argv[i]);
+				/* capture if key is an upcase chracter, so we can set */
+				/* shiftmask proper */
+				button_upper[button_act_counter]=0;
+				if((strlen(argv[i])==1) && (isupper(argv[i][0])))
+				{
+					button_upper[button_act_counter]=1; 
+					printf("%s is a upper => %d\n",argv[i],button_upper[button_act_counter]);
+				}
+				else
+				{
+					printf("%s is a lower => %d\n",argv[i],button_upper[button_act_counter]);
+				}
 				button_act_counter++;
 			}
 			continue;
@@ -741,14 +771,15 @@ void calibrate(int num)
 
 int argtokey(char *arg)
 {
-    int ret;    
+    long int ret;    
     switch(target)
     {
 #ifdef ENABLE_X
     case X:
 		if((ret=XStringToKeysym(arg))==NoSymbol) 
-			printf("Can't find %s, check include/X11/keysymdef.h\n", arg);
-		ret=XKeysymToKeycode(thedisp, ret);
+			printf("argtokey:Can't find %s, check include/X11/keysymdef.h\n", arg);
+		printf("argtokey:read key %s dblcheck %s\n",arg,  XKeysymToString(XStringToKeysym(arg)) );
+		ret=XKeysymToKeycode(thedisp,XStringToKeysym(arg));
 		return ret;
 #endif
 #ifdef ENABLE_CONSOLE
@@ -773,8 +804,8 @@ void repeat_handler(int s)
     {
 		if(button_repeat_flags[i])
 		{
-			sendkey(button_actions[i], RELEASE);
-			sendkey(button_actions[i], PRESS);
+			sendkey(button_actions[i], RELEASE, button_upper[i]);
+			sendkey(button_actions[i], PRESS, button_upper[i]);
 		}
     }
 #ifdef ENABLE_X
@@ -783,14 +814,15 @@ void repeat_handler(int s)
     signal(SIGALRM, repeat_handler);
 }
 
-void sendkey(int keycode, press_or_release_type PoR)
+void sendkey(unsigned int keycode, press_or_release_type PoR, int iscap)
 {
+int wCode;
 #ifdef ENABLE_X
     static XEvent event;
     static char needinitxev=1;
 #endif
     char conkey;
-
+printf("iscap is now %d  ",iscap);
     switch(target)
     {
 #ifdef ENABLE_X
@@ -808,10 +840,63 @@ void sendkey(int keycode, press_or_release_type PoR)
 			needinitxev=0;
 		}
 		event.xkey.type=PoR==PRESS ? KeyPress : KeyRelease;
-		event.xkey.state=PoR==PRESS ? KeyPressMask : KeyReleaseMask;
+		event.xkey.state=0x10;
 		event.xkey.keycode=keycode;
+		printf("sendkey: button_upper: %d keycode  0x%06x  %0d   ",iscap,event.xkey.keycode,keycode  );
+		printf("sendkey: keysym %s\n",XKeysymToString(XKeycodeToKeysym(thedisp, event.xkey.keycode,0) ));
+		printf("state hex %x\n",event.xkey.state);
+		/* set proper shiftmask */
+		/* check if numpad */
+		if((event.xkey.keycode>=79) && (event.xkey.keycode<=90))
+		{
+			event.xkey.state=0x10;
+		}
+		else /* not numpad */
+		{
+			if ( iscap > 0  )
+			{
+				printf("executing iscap > 0\n");
+				switch ( PoR )
+				{
+				case PRESS : 
+					printf("executing iscap > 0 , sending shiftkey first.\n");
+					/* send shift */
+					event.xkey.keycode=XKeysymToKeycode(thedisp,XK_Shift_L);
+					event.xkey.type= KeyPress ;
+					event.xkey.state=0x10 ;
+					XSendEvent(thedisp, thewindow, False, event.xkey.state, &event);
+					sleep(0.1);
+					/* send key */
+					event.xkey.keycode=keycode;
+					event.xkey.state=0x11;  /* set shift aan */
+					XSendEvent(thedisp, thewindow, False, event.xkey.state, &event);
+					break;
+
+				case RELEASE:
+					printf("iscap > 0: RELEASE , sending shiftkey last.\n");
+					/* release key */
+					event.xkey.type= KeyRelease ;
+					event.xkey.state=0x11;  // set shift aan
+					XSendEvent(thedisp, thewindow, False, event.xkey.state, &event);
+					/* release shiftkey */
+					sleep(0.2);
+					event.xkey.keycode=XKeysymToKeycode(thedisp,XK_Shift_L);
+					XSendEvent(thedisp, thewindow, False, event.xkey.state, &event);
+					break;
+				default:
+					printf(" not understood PoR\n");
+				break;
+				} /* END OF PoR  SWITCH */
+			} /* end isupper iscap */
+		} /* else if numpad => ie not numpad, check for uppercase */
+		/* check for num keypad. "+", "-" and enter do not change meaning, so no problem */
+		/* setting blunt ox10 state */
+		
 		XSendEvent(thedisp, thewindow, False, event.xkey.state, &event);
+		sleep(0.2);
+
 		break;
+
 #endif
 #ifdef ENABLE_CONSOLE
     case RAWCONSOLE:
