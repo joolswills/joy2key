@@ -1,7 +1,7 @@
 Begin3
 Title: joy2key
-Version: 1.6
-Entered-date: 18AUG98
+Version: 1.6.3
+Entered-date: 14MAY08
 Description: Emulates keyboard events in X or at the console
 Description: instead using the joystick for input.
 Description: Lets you use a joystick in programs that don't have native 
@@ -9,9 +9,8 @@ Description: joystick support.  Great for games.  Supports
 Description: a joy2keyrc file and easy calibration
 Keywords: joystick X X11 console games
 Author: tetron@interreality.org <Peter Amstutz>
-Maintained-by: tetron@interreality.org <Peter Amstutz>
-Primary-site: http://interreality.org/~tetron/technology/joy2key/
-Alternate-site: ftp://sunsite.unc.edu/pub/Linux/X11/xutils
+Maintained-by: peter.alfredsen@gmail.com <Peter Alfredsen>
+Primary-site: https://sourceforge.net/projects/joy2key/
 Platforms: Requires Linux joystick driver module version 1.0 or greater
 Platforms: (versions of joy2key up to 1.2 used v0.8.0 of joystick driver)
 Copying-policy: GPL
