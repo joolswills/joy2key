@@ -388,7 +388,7 @@ int check_config(int argc, char **argv)
 					}
 					if(feof(file)) rcargv[rcargc]=strdup(line);
 					process_args(rcargc, rcargv);
-					for(rcargc--;rcargc-1;rcargc--) free(rcargv[rcargc]);
+					for(rcargc--;rcargc>0;rcargc--) free(rcargv[rcargc]);
 				}		
 				fscanf(file, " %s ", line);
 			}
@@ -438,7 +438,7 @@ int check_config(int argc, char **argv)
 						if(feof(file)) rcargv[rcargc]=strdup(line);
 /* XXX			process_args(rcargc+1, rcargv); */
 						process_args(rcargc, rcargv);
-						for(;rcargc-1;rcargc--) free(rcargv[rcargc]);
+						for(rcargc--;rcargc>0;rcargc--) free(rcargv[rcargc]);
 					}		
 					fscanf(file, " %s ", line);
 				}
@@ -469,7 +469,7 @@ int check_config(int argc, char **argv)
 						if(feof(file)) rcargv[rcargc]=strdup(line);
 /* XXX			process_args(rcargc+1, rcargv); */
 						process_args(rcargc, rcargv);
-						for(rcargc--;rcargc-1;rcargc--) free(rcargv[rcargc]);
+						for(rcargc--;rcargc>0;rcargc--) free(rcargv[rcargc]);
 					}
 				}	
 				fscanf(file, " %s ", line);
