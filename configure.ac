@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(joy2key.c)
-AM_INIT_AUTOMAKE(joy2key, 1.6.1)
+AM_INIT_AUTOMAKE(joy2key, 1.6.3)
 AM_CONFIG_HEADER(config.h)
 AC_PROG_MAKE_SET
 

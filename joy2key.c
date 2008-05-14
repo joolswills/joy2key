@@ -56,7 +56,7 @@
 			    bug parsing joy2keyrc files...  ;-p
 	1.6.1 (27 Jan 2005) - Just a trivial update to fix the web page
 	                    and email addresses.
-	1.6.2 (22 Mar 2007) - Rens (mraix@xs4all.nl)
+	1.6.2 (22 Mar 2007) Rens (mraix@xs4all.nl)
                           - Fixed a bug, preventing joy2key from using your
                             highest numbered button.
                           - Made joy2key lower case / upper case - aware
@@ -68,7 +68,22 @@
                             ( Especially Windoze games running in Wine )
                             require exact simulation of the keyboard-presses
                             or there will be no joy(2key).
-
+	1.6.3 (12 Apr 2008) Peter Alfredsen (peter.alfredsen@gmail.com)
+                          - Fix up a few compiler warnings.
+                          - Once and for all fix configure.ac so it works.
+                          - Merge Debian, OpenSuse and Gentoo patches.
+                            Related bugs:
+                              Opensuse:
+                                https://bugzilla.novell.com/226508
+                              Gentoo:
+                                http://bugs.gentoo.org/82685
+                              Debian:
+                                http://bugs.debian.org/365146
+                                http://bugs.debian.org/404543
+			        http://bugs.debian.org/404550
+                          - Fix up the ... unique ... coding style that Rens
+                            Introduced. Merge only relevant parts of his changes.
+                            Change comment style to C.
 */
 
 /* Should be specified in the makefile */
@@ -425,7 +440,7 @@ int check_config(int argc, char **argv)
 				puts("Not enough arguments to -config");
 				exit(1);
 			}
-			if(rcfile==DEFAULT_RCFILE)
+			if(strcmp(rcfile,DEFAULT_RCFILE) == 0)
 			{
 				x=strlen(getenv("HOME")) + strlen(rcfile) + 2;
 				rcfile=(char*)malloc(x);
@@ -771,7 +786,7 @@ void calibrate(int num)
 
 int argtokey(char *arg)
 {
-    long int ret;    
+    int ret;
     switch(target)
     {
 #ifdef ENABLE_X
@@ -788,10 +803,15 @@ int argtokey(char *arg)
 		if(arg[1])
 		{
 			sscanf(arg, "%i", &ret);
-		} else ret=arg[0];
+		}
+		else
+		{
+			ret=arg[0];
+		}
 		return ret;
 #endif
     }
+    return 0;
 }
 
 void repeat_handler(int s)
@@ -816,7 +836,6 @@ void repeat_handler(int s)
 
 void sendkey(unsigned int keycode, press_or_release_type PoR, int iscap)
 {
-int wCode;
 #ifdef ENABLE_X
     static XEvent event;
     static char needinitxev=1;
@@ -876,7 +895,7 @@ printf("iscap is now %d  ",iscap);
 					printf("iscap > 0: RELEASE , sending shiftkey last.\n");
 					/* release key */
 					event.xkey.type= KeyRelease ;
-					event.xkey.state=0x11;  // set shift aan
+					event.xkey.state=0x11;  /* set shift aan */
 					XSendEvent(thedisp, thewindow, False, event.xkey.state, &event);
 					/* release shiftkey */
 					sleep(0.2);
