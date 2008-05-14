@@ -1,0 +1,208 @@
+                  |  /---\  \   /    /---\    |   /  /----  \   /
+                  |  |   |   \ /         |    |  /   |       \ /
+                  |  |   |    |          /    |--    |---     |
+                  |  |   |    |        /      |  \   |        |
+              |___|  \---/    |      /____    |   \  \----    |
+
+                                     *1.6.1*
+Greetings!
+
+Ever had some awesome game that was great in every way, only to be
+spoiled by horrible keyboard controls?  Wished you could pull out your
+trusty joystick or joypad and start blasting aliens in STYLE?  Now you can!
+
+Joy2key will translate your joystick movements into the equivilent keystrokes
+and send them to your application or game!  Works great, no muss, no fuss!
+
+Joy2key works both in X and at the console, (both raw and terminal modes.)
+
+WHAT YOU NEED
+-------------
+- Support for the /dev/js interface.  You _must_ have version 1.0 (included 
+since the 2.1.x kernel series) or later.  All 2.0+ kernels theoretically 
+will support version 1.2.1 and on of the joystick driver.  The driver 
+homepage is:
+http://atrey.karlin.mff.cuni.cz/~vojtech/joystick/
+(if for some reason you can only use the joystick driver 0.8.0 or earlier, 
+get joy2key 1.2 - however it lacks many features this version)
+- A desire to play games with the joystick :-) 
+- The source code (joy2key-1.6.1.tar.gz) for joy2key, which you probably already 
+have if you are reading this.
+
+
+COMPILING & INSTALLATION
+------------------------
+(note: for the rest of this file, commands to be typed will be denoted '$ foo', 
+where foo is to be typed in at the command and run)
+- edit the makefile to your satisfaction
+- type '$ make', (this will build the program)
+- type '$ make install' (optional, will put joy2key in /usr/local/bin and 
+	the joy2key man page in /usr/local/man/man1)
+
+That's it!  EASY!
+
+USING JOY2KEY IN X
+------------------
+In this example, I'll use the game xkobo, which is a great shoot 'em up game 
+for X available here:
+ftp://uiarchive.cso.uiuc.edu/pub/systems/linux/sunsite/games/arcade/xkobo-1.9.tar.gz
+It is perfect to joy2key.
+
+Ok, assuming you have installed xkobo and all is good and well,
+playing it with your joystick is only moments away!
+Do this:
+
+start xkobo '$ xkobo'
+start joy2key '$ joy2key -X -buttons Shift_L s -axis Left Right Up Down'
+
+You will be prompted to calibrate the joystick.  Center it, press a button, 
+move to the low/high points, rinse and repeat, following the instructions.
+Make sure it doesn't display a '?' when you press the button (you may have
+to move the stick around a bit.)  This calibrates joy2key to your stick.  
+These settings are NOT saved - if you want to avoid going through the 
+calibration each time, see "JOY2KEYRC" below.
+
+The mouse cursor will turn into a crosshair.  Click on
+the xkobo window and joy2key will start.
+
+Here's the meaning of the options.  
+-X means we're using X (as opposed to raw console or terminal mode.)  
+-buttons sets buttons 0 and 1 (we programmers like to count from 0 you know)
+	to Shift_L and s, which are shoot and pause in xkobo.
+-thresh sets the axis threshold for the X and Y axis.
+-axis sets the axis keys (what event to send when the joystick passes
+	the previously specified threshold)
+
+See include/X11/keysymdef.h for the complete listing of key symbols in X.  Don't
+include the "XK_" when passing to joy2key.  You can also use the program 'xev'
+to catch keypresses and find out their key symbols.
+
+It's possible to supply the window name (joy2key "xkobo" -X ...) on
+the command line, then you will not be prompted with the crosshair to
+select the window.
+
+USING JOY2KEY IN TERMINAL MODE
+------------------------------
+This is for ncurses applications and other programs that use the
+standard console interface.  
+
+In this case, you need -terminal instead of -X, -buttons and -axis
+take either a) the ascii code of the character argument supplied (for
+example a or H) a decimal (example: 65), octal (example: 034), or
+hexidecimal (example: 0x60) number which is the ascii code you are
+intersted in.
+
+In terminal mode, the first argument may be the terminal that you want
+to send keys to.  "/dev/tty" is automatically prepended to it, so
+"joy2key 3 -terminal ..." sends to /dev/tty3.  You can also use
+the full /dev/whatever path.
+
+USING JOY2KEY IN RAW CONSOLE MODE
+------------------------------
+Only for the brave!  Lets you interface with SVGALIB applications like 
+Doom and Quake.
+
+In this case, use -rawconsole. Look in the file "rawscancodes" and
+find the keys you want.  You must supply these to -buttons and -axis.
+Note: single digits 0-9 are interpreted as ascii 0-9 (which is ascii
+40-49 or thereabouts) so you need to use hex notation (0x0 to 0x9) for
+SCANCODE_ESCAPE through SCANCODE_8.  Other option are unaffected.
+
+The first argument on the command line works the same as in terminal mode.
+
+
+AUTOREPEAT
+----------
+Thanks to Pierre Juhen, joy2key now has an autorepeat option.
+Simply put -autorepeat on the command line and joy2key will repeatedly send
+held down buttons at either the default or specified frequency.
+
+
+CALIBRATION (-deadzone)
+-----------------------
+
+Alright, automatic calibration is pretty straightforward.  If you
+don't supply -thresh to the command line (as described below) you have
+to calibrate yourself.  The only non-obvious part is the -deadzone
+option.  Normally the threshold is set halfway in between the midpoint
+and maximum for each axis.  -deadzone is a percentage of how far from
+the midpoint the threshold will be.
+			threshold = middle + ((maximum - middle) * deadzone)
+1%  is very sensitive (probably unplayable due to drift creating false events)
+50% is normal sensitivity (default, threshold halfway between midpoint & extreme)
+99% is very unsensitive (probably unplayable as well since nothing will register)
+Feel free to experiment.  -deadzone does not affect the -thresh option in
+any way.
+
+
+AVOIDING CALIBRATION
+--------------------
+Ok, earlier versions of joy2key required a clunky method of specifing
+at what point (the "threshold") a joystick axis move would trigger a
+key press/release event.  New in this version you can calibrate
+automatically, but I'm sure that will get annoying quickly, and you
+will want to put you calibration in the below-mentioned joy2keyrc :)
+This is the -thresh option.  Did you notice that when you were
+calibrating it spat out "Axis # low/high threshold set at #"?  Those
+are the threshold values.  Put '-thresh low high low high ...' on the
+command line where the first low is the low threshold for axis 0, high
+is the high threshold for axis 0, the next low is the low theshold for
+axis 1, etc. and you won't be bothered by the demand to calibrate 
+manually.
+
+
+JOY2KEYRC (new in v1.4)
+---------
+Now you can avoid typing long annoying command lines for joy2key!  The
+new .joy2keyrc will store your configurations and let you use them
+with the -config command.  For example, running xkobo is now a simple
+matter of:
+'$ joy2key -rcfile joy2keyrc.sample -config xkobo'
+
+However, if your rc file is in the default place ~/.joy2keyrc
+'$ joy2key -config xkobo'
+
+Neat, eh?
+
+The format of joy2keyrc is simple.  It consists of two types of blocks, 
+"COMMON" and "START" (case matters).
+
+START blocks are followed by the configuration name ('START xkobo' in
+this case) and then normal options as they would appear on the command
+line.  In the case of xkobo, it looks something like this:
+	START xkobo
+	-X
+	-buttons Shift_L s
+	-axis Left Right Up Down
+
+COMMON blocks are always applied when the file is read in, so this
+will contain settings common to all configurations (like -thresh or
+-deadzone).  Note that COMMON blocks are only read in when there is
+either a -rcfile or -config on the actual command line.
+
+Note you can include -rcfile and -config option in rc files themselves...
+... I think :)
+
+
+COPYING, LEGAL STUFF 
+-------------------- 
+This software is under the GNU general public license (see COPYING in
+this archive.)  This basically means you can do whatever you want with
+it, and to it.  Have fun.  Send me mail if you make something cool.  I
+CANNOT be held responsible for any damage, real or imagined, this
+program might wreak upon your system.  In the words of one great
+hacker who escapes me at this moment: "If it breaks, you get to keep
+both pieces."
+
+That said, please mail me about your joy2key experiences!
+I can be reached at:
+	tetron@interreality.org <Peter Amstutz>
+
+Also there is a web page that will always have the latest version of
+joy2key:
+        http://interreality.org/~tetron/technology/joy2key/
+
+Have fun.
+
+- Peter Amstutz 
+15:43 27 January 2005

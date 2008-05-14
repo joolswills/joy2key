@@ -1,0 +1,57 @@
+COMMON
+#-thresh 300 825 300 800
+-thresh -16383 16383 -16383 16383
+
+# Now there's xkobo deluxe that uses SDL and supports the joystick
+# directly, but hey, I wrote joy2key in 1998 :-)
+START xkobo
+-X
+-buttons Shift_L s
+-axis Left Right Up Down
+
+START ines
+-X
+# -buttons z a Tab Return
+-buttons Tab Return z a
+-axis Left Right Up Down
+
+# (The following two entries are pretty obsolete, but kept 
+#  for historical interest.  Would you believe that we were 
+#  still running iD Software's Doom and Quake binaries back then, 
+#  because they hadn't released the source code yet?)
+
+START quake2
+# set the following keybindings in quake2:
+# bind kp_up +forward
+# bind kp_down +back
+# bind kp_leftarrow +left
+# bind kp_rightarrow +right
+# bind ctrl +attack
+# bind shift +movedown
+# bind alt +strafe
+# bind space +moveup
+# bind / weapnext
+# bind ins +klook
+# * The same notes for playing sdoom (below) apply to console 
+# quake as well.
+-rawconsole
+-axis 75 77 72 80
+-buttons 97 42 56 57 53 110
+
+# Since sdoom is a console application, you either
+# A] must run joy2key on the same virtual console as sdoom
+#    (try joy2key -config doom &)
+#    (don't forget to kill joy2key when you are done, or 
+#     moving the joystick will continue to send keys to
+#     the console)
+#                           or
+# B] run joy2key as root (so it can send keypresses to virtual
+#    consoles it doesn't own)
+#    (again, remeber to kill it when you are done)
+START doom
+# send keyup codes
+-rawconsole
+# Control (fire) : LShift (run) : Alt (strafe) : Space (open/push)
+-buttons 97 42 56 57 
+# Left Arrow : Right Arrow : Up Arrow : Down Arrow
+-axis 75 77 72 80

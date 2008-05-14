@@ -1,0 +1,106 @@
+.TH JOY2KEY 1 "17 August 1998"
+.SH NAME
+joy2key \- Emulate keyboard events using a Joystick 
+.SH SYNOPSIS
+.B joy2key 
+Usage: joy2key ["Window Name"]
+       [ -rawconsole ]
+       [ -terminal ]
+       [ -X ]
+       [ -axis [(axis0) low hi] [(axis1) low hi]  ...]
+       [ -thresh [(axis0) low hi] [(axis1) low hi]  ...]
+       [ -buttons [(button0)] [(button1)] [(button2)] ...]
+       [ -dev {/dev/js0} ]
+       [ -rcfile {.joy2keyrc} ]
+       [ -config {no default} ]
+       [ -autorepeat {(freq) 5} ]
+       [ -deadzone {(percent) 50} ]
+
+note: [] denotes `optional' option or argument,
+      () hints at the wanted arguments for options
+      {} denotes default (compiled-in) parameters
+
+(note: defaults may have been changed by editing joy2key.c)
+.SH DESCRIPTION
+.I joy2key 
+monitors the joystick (normally /dev/js0) and sends keyboard events to
+an X window, terminal, or raw console.  In the case of X, xwininfo(1)
+is used to retrive the window ID, which should not be a problem as
+this is a standard utility in most X11 distributions.  To find the
+symbolic name of a particular key, see include/X11/keysymdef.h.  In
+terminal mode, joy2key sends the ascii character given on the command
+line (that is, "joy2key -buttons a" means send lowercase 'a' when the
+first joystick button is pushed).  In raw console mode, please consult 
+the document "rawscancodes" included in this distribution for the
+proper scancodes.
+.SS Options
+.TP
+.B -X
+Send X events.  May be compiled out of your copy of joy2key.
+.TP
+.B -rawconsole
+For SVGALIB and similar programs that put the keyboard in raw mode.
+Sends scancodes.  May be compiled out of your copy of joy2key.
+.TP
+.B -terminal
+Send ascii characters.  May be compiled out of your copy of joy2key.
+.TP
+.B -axis
+Specifies actions to send when passing low/high values for each axis.
+Specified in pairs, from axis0 ... axisN, that is, the X axis is
+axis0, then the Y axis (axis1), then if you have a joystick hat that may be
+axis 2 and 3, etc.  To figure out which axis is which, use the 
+.I jstest
+program that comes with the joystick driver.
+.TP
+.B -buttons
+Similar to -arrows, but for buttons.  Goes from button0 ... buttonN,
+specifying key to send for each button on joystick.  Use the 
+.I jstest
+program to determine the numbering for each button.
+.TP
+.B -thresh
+Specifies low/high thresholds to use (i.e. at what point moving the stick 
+or pressing the gamepad triggers an event) in pairs, for each joystick 
+axis.
+.TP
+.B -dev
+Specifies joystick device to use.  Defaults /dev/js0 (first joystick)
+.TP
+.B -autorepeat
+Turns on and optionally specifies autorepeat frequency, i.e.
+the number of times per second a button which is held down will
+be repeated.  
+.TP
+.B -deadzone
+Controls sensitivity when manually calibrating.
+.TP
+.B -rcfile
+Sets the rc file to look in.
+.TP
+.B -config
+Reads in a config in an rc file.
+.SH FILES
+.I /dev/js[01]
+The joystick driver.  Must be installed for joy2key to work.  Joy2key
+only supports versions 1.0+ of the joystick driver.  Older versions of 
+joy2key use the 0.8.0 joystick driver.  If for some reason a 1.0+
+joystick driver does not work for you, use joy2key 1.2.
+.PP
+The Linux joystick driver is available at 
+.P
+http://atrey.karlin.mff.cuni.cz/~vojtech/joystick/
+.P
+.I ~/.joy2keyrc
+Rc file searched for commands in -config.
+.P
+The joy2key homepage is located at:
+.P
+http://interreality.org/~tetron/technology/joy2key/
+.P 
+.SH BUGS
+I don't like writing man pages, so this man page
+may be buggy :)
+.SH COPYING
+This is free software under the GNU General Public License.  See COPYING in the archive
+to more information.
