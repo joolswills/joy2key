@@ -80,7 +80,7 @@
                               Debian:
                                 http://bugs.debian.org/365146
                                 http://bugs.debian.org/404543
-			        http://bugs.debian.org/404550
+                                http://bugs.debian.org/404550
                           - Fix up the ... unique ... coding style that Rens
                             Introduced. Merge only relevant parts of his changes.
                             Change comment style to C.
