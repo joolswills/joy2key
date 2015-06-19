@@ -505,7 +505,7 @@ void process_args(int argc, char **argv)
                 exit(1);
             }
             button_act_counter=0;
-            while((i+1)<=argc && (argv[i+1][0]!='-' || 
+            while((i+1)<argc && (argv[i+1][0]!='-' || 
                                  (argv[i+1][0]=='-' && !argv[i+1][1])))
             {
                 button_actions[button_act_counter]=argtokey(argv[++i]);
