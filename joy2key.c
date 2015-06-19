@@ -1,6 +1,6 @@
 /*
-   joy2key 
-   
+   joy2key
+
    This program gets events from the joystick device /dev/input/js0 and
    dispatches X events or console keypresses to a specific window
    based on joystick status.  It is most useful for adding joystick
@@ -12,7 +12,7 @@
 
         - Peter Amstutz (tetron@interreality.org)
 
-        special thanks to Zhivago of EFNet's #c for helping me out 
+        special thanks to Zhivago of EFNet's #c for helping me out
         a LOT with the XSendEvent() code...
 
 /* Should be specified in the makefile */
@@ -60,8 +60,8 @@ int jsfd=-1,
     button_act_counter=0,
     thresh_counter=0,
     deadzone=DEFAULT_DEADZONE;
-char *device=DEFAULT_DEVICE, 
-    *rcfile=DEFAULT_RCFILE, 
+char *device=DEFAULT_DEVICE,
+    *rcfile=DEFAULT_RCFILE,
     button_repeat_flags[256],
     common_read=0;
 typedef enum {NONE, X, RAWCONSOLE, TERMINAL} target_type;
@@ -77,7 +77,7 @@ target_type target=NONE;
 
 #ifdef ENABLE_X
 Display *thedisp;
-int thewindow=0, 
+int thewindow=0,
     thescreen=0;
 static Window RegisterCloseEvent(Display *disp, Window win);
 static void CheckIfWindowClosed(Display *disp, Window parentwin, Window win);
@@ -105,19 +105,19 @@ int main(int argc, char **argv)
     FILE *foo;
     char string[255],
         axis_hold_flags[256],
-        numaxes, 
+        numaxes,
         numbuttons;
     struct js_event js;
     int i;
     struct timeval tv;
-    
+
     puts("joy2key - reads joystick status and dispatches keyboard events");
     puts("By Peter Amstutz ("PETERS_EMAIL")");
     puts("This is free software under the GNU General Public License (GPL v2)");
     puts("              (see COPYING in the joy2key archive)");
     puts("You are welcome to use/modify this code, and please e-mail me");
     puts("if anything cool comes of it!");
-    printf("Version: %s   Binary built on %s at %s\n\n", 
+    printf("Version: %s   Binary built on %s at %s\n\n",
            JOY2KEY_VERSION, __DATE__, __TIME__);
 
     memset(axis_threshold, 0, sizeof(axis_threshold));
@@ -142,9 +142,9 @@ int main(int argc, char **argv)
         return 1;
     }
     if (ioctl(jsfd, JSIOCGAXES, &numaxes)) {
-/* acording to the American Heritage Dictionary of the English 
+/* acording to the American Heritage Dictionary of the English
    Language 'axes' *IS* the correct pluralization of 'axis' */
-        perror("joy2key: error getting axes"); 
+        perror("joy2key: error getting axes");
         return 1;
     }
     if (ioctl(jsfd, JSIOCGBUTTONS, &numbuttons)) {
@@ -157,11 +157,11 @@ int main(int argc, char **argv)
 
     switch(target)
     {
-#ifdef ENABLE_X 
+#ifdef ENABLE_X
     case X:
         thescreen=DefaultScreen(thedisp);
         if (argc == 1 || argv[1][0] == '-') {
-            { 
+            {
                 puts("Please select a window to send events to");
                 sprintf(string, "xwininfo");
             }
@@ -173,7 +173,7 @@ int main(int argc, char **argv)
               (sscanf(string, "xwininfo: Window id: %x", &thewindow) != 1));
         pclose(foo);
 
-        if(thewindow==0) 
+        if(thewindow==0)
         {
             sprintf(string, "xwininfo -id \"%s\"", argv[1]);
             foo=popen(string, "r");
@@ -242,9 +242,9 @@ int main(int argc, char **argv)
   FD_SET(ConnectionNumber(thedisp), &close_set);
   FD_SET(jsfd, &close_set);
   XFlush(thedisp);
-  select((ConnectionNumber(thedisp) > jsfd ? ConnectionNumber(thedisp) : jsfd) + 1, 
+  select((ConnectionNumber(thedisp) > jsfd ? ConnectionNumber(thedisp) : jsfd) + 1,
   &close_set, NULL, NULL, NULL);
-  if(FD_ISSET(ConnectionNumber(thedisp), &close_set) && target==X) 
+  if(FD_ISSET(ConnectionNumber(thedisp), &close_set) && target==X)
   if(target==X) CheckIfWindowClosed(thedisp, parentwin, thewindow);
 */
             FD_ZERO(&close_set);
@@ -265,7 +265,7 @@ int main(int argc, char **argv)
             if(button_actions[js.number])
             {
                 button_repeat_flags[js.number]=js.value;
-                sendkey(button_actions[js.number], 
+                sendkey(button_actions[js.number],
                         js.value ? PRESS : RELEASE, button_upper[js.number]);
             }
             break;
@@ -288,7 +288,7 @@ int main(int argc, char **argv)
                     axis_hold_flags[js.number]=0;
                 }
                 if(js.value<axis_threshold[js.number][0])
-                { 
+                {
                     if(!axis_actions[js.number][0]) break;
                     sendkey(axis_actions[js.number][0], PRESS, 0);
                     axis_hold_flags[js.number]=1;
@@ -298,8 +298,8 @@ int main(int argc, char **argv)
                     if(!axis_actions[js.number][1]) break;
                     sendkey(axis_actions[js.number][1], PRESS, 0);
                     axis_hold_flags[js.number]=2;
-                }       
-            }       
+                }
+            }
             break;
         }
 #ifdef ENABLE_X
@@ -314,12 +314,12 @@ int check_config(int argc, char **argv)
     FILE *file;
     int rcargc;
     char *rcargv[255], line[255];
-    
+
     for(i=1; i<argc; i++)
     {
         if(!strcmp("-rcfile", argv[i]))
         {
-            if(i+2>argc) 
+            if(i+2>argc)
             {
                 puts("Not enough arguments to -rcfile");
                 exit(1);
@@ -335,10 +335,10 @@ int check_config(int argc, char **argv)
                 if(!strcmp(line, "COMMON"))
                 {
                     fscanf(file, " %s ", line);
-                    for(rcargc=1; strcmp(line, "START") && strcmp(line, "COMMON") 
+                    for(rcargc=1; strcmp(line, "START") && strcmp(line, "COMMON")
                             && !feof(file); rcargc++)
                     {
-                        if(line[0]=='#') 
+                        if(line[0]=='#')
                         {
                             while(fgetc(file)!='\n');
                             rcargc--;
@@ -352,7 +352,7 @@ int check_config(int argc, char **argv)
                     }
                     process_args(rcargc, rcargv);
                     for(rcargc--;rcargc>0;rcargc--) free(rcargv[rcargc]);
-                }       
+                }
                 fscanf(file, " %s ", line);
             }
             fclose(file);
@@ -363,7 +363,7 @@ int check_config(int argc, char **argv)
         }
         if(!strcmp("-config", argv[i]))
         {
-            if(i+2>argc) 
+            if(i+2>argc)
             {
                 puts("Not enough arguments to -config");
                 exit(1);
@@ -387,44 +387,10 @@ int check_config(int argc, char **argv)
                     if(!strcmp(line, "COMMON"))
                     {
                         fscanf(file, " %s ", line);
-                        for(rcargc=1; strcmp(line, "START") && strcmp(line, "COMMON") 
+                        for(rcargc=1; strcmp(line, "START") && strcmp(line, "COMMON")
                                 && !feof(file); rcargc++)
                         {
-                            if(line[0]=='#') 
-                            {
-                                while(fgetc(file)!='\n');
-                                rcargc--;
-                            }
-                            else rcargv[rcargc]=strdup(line);
-                            fscanf(file, " %s ", line);
-                        }
-                        if(feof(file)) {
-                            rcargv[rcargc]=strdup(line);
-                            rcargc++;
-                        }
-/* XXX          process_args(rcargc+1, rcargv); */
-                        process_args(rcargc, rcargv);
-                        for(rcargc--;rcargc>0;rcargc--) free(rcargv[rcargc]);
-                    }       
-                    fscanf(file, " %s ", line);
-                }
-                rewind(file);
-                common_read=1;
-            }       
-            fscanf(file, " %s ", line);
-            while(!feof(file))
-            {
-                if(!strcmp(line, "START"))
-                {
-                    fscanf(file, " %s ", line);
-                    if(!strcmp(line, argv[i+1]))
-                    {
-                        f=1;
-                        fscanf(file, " %s ", line);
-                        for(rcargc=1; strcmp(line, "START") && strcmp(line, "COMMON") 
-                                && !feof(file); rcargc++)
-                        {
-                            if(line[0]=='#') 
+                            if(line[0]=='#')
                             {
                                 while(fgetc(file)!='\n');
                                 rcargc--;
@@ -440,11 +406,45 @@ int check_config(int argc, char **argv)
                         process_args(rcargc, rcargv);
                         for(rcargc--;rcargc>0;rcargc--) free(rcargv[rcargc]);
                     }
-                }   
+                    fscanf(file, " %s ", line);
+                }
+                rewind(file);
+                common_read=1;
+            }
+            fscanf(file, " %s ", line);
+            while(!feof(file))
+            {
+                if(!strcmp(line, "START"))
+                {
+                    fscanf(file, " %s ", line);
+                    if(!strcmp(line, argv[i+1]))
+                    {
+                        f=1;
+                        fscanf(file, " %s ", line);
+                        for(rcargc=1; strcmp(line, "START") && strcmp(line, "COMMON")
+                                && !feof(file); rcargc++)
+                        {
+                            if(line[0]=='#')
+                            {
+                                while(fgetc(file)!='\n');
+                                rcargc--;
+                            }
+                            else rcargv[rcargc]=strdup(line);
+                            fscanf(file, " %s ", line);
+                        }
+                        if(feof(file)) {
+                            rcargv[rcargc]=strdup(line);
+                            rcargc++;
+                        }
+/* XXX          process_args(rcargc+1, rcargv); */
+                        process_args(rcargc, rcargv);
+                        for(rcargc--;rcargc>0;rcargc--) free(rcargv[rcargc]);
+                    }
+                }
                 fscanf(file, " %s ", line);
             }
             fclose(file);
-            if(!f) 
+            if(!f)
             {
                 printf("Can't find config \"%s\"\n", argv[i+1]);
                 exit(1);
@@ -465,20 +465,20 @@ void process_args(int argc, char **argv)
     {
         if(!strcmp(argv[i], "-axis"))
         {
-            if(target==NONE) 
+            if(target==NONE)
             {
                 puts("Must specify a target first!");
                 exit(1);
             }
-            if(i+1==argc) 
+            if(i+1==argc)
             {
                 puts("Not enough arguments to -axis");
                 exit(1);
             }
             axis_act_counter=0;
             while((i+1)<argc && argv[i+1][0]!='-')
-            {       
-                if(i+2==argc) 
+            {
+                if(i+2==argc)
                 {
                     puts("Not enough arguments to -axis");
                     exit(1);
@@ -492,19 +492,19 @@ void process_args(int argc, char **argv)
         }
         if(!strcmp(argv[i], "-buttons"))
         {
-            if(target==NONE) 
+            if(target==NONE)
             {
                 puts("Must specify a target first!");
                 exit(1);
             }
 
-            if(i+1==argc) 
+            if(i+1==argc)
             {
                 puts("Not enough arguments to -buttons");
                 exit(1);
             }
             button_act_counter=0;
-            while((i+1)<argc && (argv[i+1][0]!='-' || 
+            while((i+1)<argc && (argv[i+1][0]!='-' ||
                                  (argv[i+1][0]=='-' && !argv[i+1][1])))
             {
                 button_actions[button_act_counter]=argtokey(argv[++i]);
@@ -514,7 +514,7 @@ void process_args(int argc, char **argv)
                 button_upper[button_act_counter]=0;
                 if((strlen(argv[i])==1) && (isupper(argv[i][0])))
                 {
-                    button_upper[button_act_counter]=1; 
+                    button_upper[button_act_counter]=1;
                     printf("%s is a upper => %d\n",argv[i],button_upper[button_act_counter]);
                 }
                 else
@@ -527,22 +527,22 @@ void process_args(int argc, char **argv)
         }
         if(!strcmp(argv[i], "-thresh"))
         {
-            if(i+1==argc) 
+            if(i+1==argc)
             {
                 puts("Not enough arguments to -thresh");
                 exit(1);
             }
-            while((i+1)<argc && 
-                  (argv[i+1][0]!='-' || 
+            while((i+1)<argc &&
+                  (argv[i+1][0]!='-' ||
                    (argv[i+1][0]=='-' && isdigit(argv[i+1][1]))))
             {
                 i++;
-                if(i+1==argc) 
+                if(i+1==argc)
                 {
                     puts("Not enough arguments to -thresh");
                     exit(1);
                 }
-                if(argv[i][0] != 'x'  && argv[i+1][1] != 'x') 
+                if(argv[i][0] != 'x'  && argv[i+1][1] != 'x')
                     axis_threshold_defined[thresh_counter] = 1;
                 axis_threshold[thresh_counter][0]=atoi(argv[i]);
                 axis_threshold[thresh_counter++][1]=atoi(argv[++i]);
@@ -551,17 +551,17 @@ void process_args(int argc, char **argv)
         }
         if(!strcmp(argv[i], "-autorepeat"))
         {
-            if(i+1==argc || (argv[i+1][0]=='-')) 
+            if(i+1==argc || (argv[i+1][0]=='-'))
             {
                 repeat_time.it_interval.tv_usec=1000000/DEFAULT_AUTOREPEAT;
                 continue;
             }
-            if((repeat_time.it_interval.tv_usec=atoi(argv[++i]))==0) 
-            { 
+            if((repeat_time.it_interval.tv_usec=atoi(argv[++i]))==0)
+            {
                 puts("Invalid autorepeat frequency, using default");
                 repeat_time.it_interval.tv_usec=1000000/DEFAULT_AUTOREPEAT;
             }
-            if(repeat_time.it_interval.tv_usec>50) 
+            if(repeat_time.it_interval.tv_usec>50)
             {
                 repeat_time.it_interval.tv_usec=1000000/50;
                 printf("Set to maximum 50 times / second.\n");
@@ -572,23 +572,23 @@ void process_args(int argc, char **argv)
         }
         if(!strcmp(argv[i], "-deadzone"))
         {
-            if(i+1==argc || (argv[i+1][0]=='-')) 
+            if(i+1==argc || (argv[i+1][0]=='-'))
             {
                 puts("Not enough arguments to -deadzone");
-                exit(1);        
+                exit(1);
                 continue;
             }
-            if((deadzone=atoi(argv[++i]))==0) 
-            { 
+            if((deadzone=atoi(argv[++i]))==0)
+            {
                 puts("Invalid deadzone setting, using default");
                 deadzone=DEFAULT_DEADZONE;
             }
-            if(deadzone>99) 
+            if(deadzone>99)
             {
                 deadzone=99;
                 puts("Set to maximum 99%");
             }
-            if(deadzone<1) 
+            if(deadzone<1)
             {
                 deadzone=1;
                 puts("Set to minimum 1%");
@@ -598,7 +598,7 @@ void process_args(int argc, char **argv)
 
         if(!strcmp(argv[i], "-dev"))
         {
-            if(i+1==argc) 
+            if(i+1==argc)
             {
                 puts("Not enough arguments to -dev");
                 exit(1);
@@ -624,7 +624,7 @@ void process_args(int argc, char **argv)
         {
             target=X;
             thedisp=XOpenDisplay(NULL);
-            if(thedisp==NULL) 
+            if(thedisp==NULL)
             {
                 puts("Error opening X Display");
                 exit(1);
@@ -656,7 +656,7 @@ void process_args(int argc, char **argv)
         exit(1);
     }
 
-    
+
 }
 
 void calibrate(int num)
@@ -670,12 +670,12 @@ void calibrate(int num)
     do
     {
         read(jsfd, &js, sizeof(struct js_event));
-        if(js.type==JS_EVENT_AXIS && js.number==num) 
+        if(js.type==JS_EVENT_AXIS && js.number==num)
         {
             joymid=js.value;
             printf("\rvalue: %i   ", joymid);
             fflush(stdout);
-        }   
+        }
     } while(js.type!=JS_EVENT_BUTTON || (js.type==JS_EVENT_BUTTON && js.value==0));
     printf("\nLocked at %i", joymid);
     printf("\nPlease move the axis to its lowest position and press a button.\n?");
@@ -683,10 +683,10 @@ void calibrate(int num)
     do
     {
         read(jsfd, &js, sizeof(struct js_event));
-        if(js.type==JS_EVENT_AXIS && js.number==num) 
+        if(js.type==JS_EVENT_AXIS && js.number==num)
         {
             axis_threshold[num][0]=js.value;
-            printf("\rvalue: %i   ", axis_threshold[num][0]);    
+            printf("\rvalue: %i   ", axis_threshold[num][0]);
             fflush(stdout);
         }
     } while(js.type!=JS_EVENT_BUTTON || (js.type==JS_EVENT_BUTTON && js.value==0));
@@ -695,7 +695,7 @@ void calibrate(int num)
     do
     {
         read(jsfd, &js, sizeof(struct js_event));
-        if(js.type==JS_EVENT_AXIS && js.number==num) 
+        if(js.type==JS_EVENT_AXIS && js.number==num)
         {
             axis_threshold[num][1]=js.value;
             printf("\rvalue: %i   ", axis_threshold[num][1]);
@@ -708,7 +708,7 @@ void calibrate(int num)
     axis_threshold_defined[num] = 1;
     puts("Calibrations set at:");
     printf("Axis %i low threshold set at %i\n", num, axis_threshold[num][0]);
-    printf("Axis %i high threshold set at %i\n", num, axis_threshold[num][1]);    
+    printf("Axis %i high threshold set at %i\n", num, axis_threshold[num][1]);
     puts("(you can put these in your .joy2keyrc to avoid calibrating in the future)");
 }
 
@@ -719,7 +719,7 @@ int argtokey(char *arg)
     {
 #ifdef ENABLE_X
     case X:
-        if((ret=XStringToKeysym(arg))==NoSymbol) 
+        if((ret=XStringToKeysym(arg))==NoSymbol)
             printf("argtokey:Can't find %s, check include/X11/keysymdef.h\n", arg);
         printf("argtokey:read key %s dblcheck %s\n",arg,  XKeysymToString(XStringToKeysym(arg)) );
         ret=XKeysymToKeycode(thedisp,XStringToKeysym(arg));
@@ -807,7 +807,7 @@ printf("iscap is now %d  ",iscap);
                 printf("executing iscap > 0\n");
                 switch ( PoR )
                 {
-                case PRESS : 
+                case PRESS :
                     printf("executing iscap > 0 , sending shiftkey first.\n");
                     /* send shift */
                     event.xkey.keycode=XKeysymToKeycode(thedisp,XK_Shift_L);
@@ -840,7 +840,7 @@ printf("iscap is now %d  ",iscap);
         } /* else if numpad => ie not numpad, check for uppercase */
         /* check for num keypad. "+", "-" and enter do not change meaning, so no problem */
         /* setting blunt ox10 state */
-        
+
         XSendEvent(thedisp, thewindow, False, event.xkey.state, &event);
         sleep(0.2);
 
@@ -849,7 +849,7 @@ printf("iscap is now %d  ",iscap);
 #endif
 #ifdef ENABLE_CONSOLE
     case RAWCONSOLE:
-        if(PoR==PRESS) 
+        if(PoR==PRESS)
             conkey=keycode;
         if(PoR==RELEASE)
             conkey=keycode | 0x80;
@@ -871,11 +871,11 @@ printf("iscap is now %d  ",iscap);
 
 void cleanup(int s)
 {
-    printf("\n%s caught, cleaning up & quitting.\n", 
-           s==SIGINT ? "SIGINT" : 
+    printf("\n%s caught, cleaning up & quitting.\n",
+           s==SIGINT ? "SIGINT" :
            (s==SIGTERM ? "SIGTERM" : ((s == 0) ? "Window die" : "Unknown")));
 /* Because the window has just closed, it will print out an error upon
-   calling these functions.  To suppress this superflous error, don't call 
+   calling these functions.  To suppress this superflous error, don't call
    them :) */
 /*    XFlush(thedisp); */
 /*    XCloseDisplay(thedisp); */
@@ -914,9 +914,9 @@ CheckIfWindowClosed(Display *disp,
     XEvent  event;
 
 
-    if (XCheckWindowEvent(disp, parentwin, SubstructureNotifyMask, &event) 
+    if (XCheckWindowEvent(disp, parentwin, SubstructureNotifyMask, &event)
         == True) {
-        if (event.type == DestroyNotify && event.xdestroywindow.window 
+        if (event.type == DestroyNotify && event.xdestroywindow.window
             == win) {
             cleanup(0);
         }
