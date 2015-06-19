@@ -51,10 +51,9 @@
 #include <X11/keysym.h>
 #endif
 
-int unsigned button_actions[256];
+unsigned long button_actions[256], axis_actions[256][2];
 int button_upper[256];
 int jsfd=-1,
-    axis_actions[256][2],
     axis_threshold[256][2], /* 0 = low (down); 1 = hi (up) */
     axis_threshold_defined[256], /* 1 == defined */
     axis_act_counter=0,
@@ -91,7 +90,7 @@ int consolefd;
 void process_args(int argc, char **argv);
 int check_config(int argc, char **argv);
 int check_device(int argc, char **argv);
-void sendkey(unsigned int keycode, press_or_release_type PoR, int iscap);
+void sendkey(unsigned long keycode, press_or_release_type PoR, int iscap);
 void cleanup(int s);
 void repeat_handler(int s);
 void calibrate(int num);
@@ -763,12 +762,14 @@ void repeat_handler(int s)
     signal(SIGALRM, repeat_handler);
 }
 
-void sendkey(unsigned int keycode, press_or_release_type PoR, int iscap)
+void sendkey(unsigned long keycode, press_or_release_type PoR, int iscap)
 {
 #ifdef ENABLE_X
     static XEvent event;
     static char needinitxev=1;
 #endif
+    unsigned long keycode_n = htonl(keycode);
+    unsigned char* key = (unsigned char*) &keycode_n;
     char conkey;
 printf("iscap is now %d  ",iscap);
     switch(target)
@@ -790,7 +791,7 @@ printf("iscap is now %d  ",iscap);
         event.xkey.type=PoR==PRESS ? KeyPress : KeyRelease;
         event.xkey.state=0x10;
         event.xkey.keycode=keycode;
-        printf("sendkey: button_upper: %d keycode  0x%06x  %0d   ",iscap,event.xkey.keycode,keycode  );
+        printf("sendkey: button_upper: %d keycode  0x%06x  %0ld   ",iscap,event.xkey.keycode,keycode  );
         printf("sendkey: keysym %s\n",XKeysymToString(XKeycodeToKeysym(thedisp, event.xkey.keycode,0) ));
         printf("state hex %x\n",event.xkey.state);
         /* set proper shiftmask */
@@ -857,8 +858,12 @@ printf("iscap is now %d  ",iscap);
     case TERMINAL:
         if(PoR==PRESS)
         {
-            conkey=keycode;
-            ioctl(consolefd, TIOCSTI, &conkey);
+            int i;
+            for(i=0; i<sizeof(keycode); i++) {
+                if (key[i] > 0) {
+                    ioctl(consolefd, TIOCSTI, &key[i]);
+                }
+            }
         }
 #endif
     }
